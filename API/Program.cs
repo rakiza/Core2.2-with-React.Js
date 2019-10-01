@@ -10,12 +10,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Persistence;
 using Microsoft.EntityFrameworkCore;
+using Persistence;
+
 
 namespace API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var host = CreateWebHostBuilder(args).Build();
 
@@ -28,6 +30,7 @@ namespace API
                     //Assurer la migration avant l'éxecution.
                     context.Database.Migrate();
 
+                    await Seed.SeedDataAsync(context);
                     
                 }
                 catch(Exception ex)
