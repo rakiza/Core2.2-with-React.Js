@@ -31,7 +31,8 @@ namespace API
 
             services.AddCors(Options=>{
                Options.AddPolicy("CorsPolicy",policy=>{
-                    policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3003");
+                    policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000");
+                    //http://localhost:3000/
                });
             });
             
