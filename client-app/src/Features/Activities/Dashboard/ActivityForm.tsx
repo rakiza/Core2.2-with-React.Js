@@ -7,9 +7,10 @@ interface IProps{
     cancel:()=>void;
     edit:(activity:IActivity)=>void;
     create:(activity:IActivity)=>void;
+    submitting:boolean;
 }
 
-const ActivityForm:React.FC<IProps>= ({activity:initialActivity,create,edit,cancel}) => {
+const ActivityForm:React.FC<IProps>= ({activity:initialActivity,create,edit,cancel,submitting}) => {
     
     const InitialiseForm=()=>{
         if(!initialActivity){
@@ -35,9 +36,9 @@ const ActivityForm:React.FC<IProps>= ({activity:initialActivity,create,edit,canc
     }
 
     const submitHandler=()=>{
-        if(activity && activity.id){
+        if(activity && activity.id.length){            
             edit(activity);
-        }else{
+        }else{            
             let newActivity={...activity};
             newActivity.id=uuid();
             create(newActivity);
@@ -55,7 +56,7 @@ const ActivityForm:React.FC<IProps>= ({activity:initialActivity,create,edit,canc
                 <Form.Input placeholder='City' name='city' value={activity.city} onChange={inputChange}/>
                 <Form.Input placeholder='Venue' name='venue' value={activity.venue} onChange={inputChange}/>
 
-                <Button floated='right' type='submit' positive content='Save'/>
+                <Button floated='right' type='submit' positive content='Save' loading={submitting}/>
                 <Button floated='right' type='button' content='Cancel' onClick={cancel}/>
             </Form>
         </Segment>
