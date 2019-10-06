@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { Item, Button, Label } from 'semantic-ui-react'
 
 import ActivityStore from '../../../App/Stores/ActivityStore';
+import { Link } from 'react-router-dom';
 
 const ActivityList:React.FC =() => {
 
@@ -21,7 +22,7 @@ const ActivityList:React.FC =() => {
                                 <div>{activity.city}, {activity.venue}</div>
                             </Item.Description>
                             <Item.Extra>
-                                <Button color='blue' floated='right' content='View' onClick={() => activityStore.selectActivity(activity.id)} />
+                                <Button color='blue' floated='right' content='View' as={Link} to={`/activities/details/${activity.id}`} />
                                 <Label content={activity.category} />
 
                                 <Button

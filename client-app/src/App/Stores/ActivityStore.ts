@@ -1,4 +1,4 @@
-import { observable, action, computed } from 'mobx';
+import { observable, action, computed, runInAction } from 'mobx';
 import { createContext, SyntheticEvent, FormEvent } from 'react';
 import {v4 as uuid} from 'uuid';
 
@@ -33,19 +33,48 @@ class ActivityStore {
         }
         
         this.loading = false;  
-
-        /* API.ActivityServices.GetAll()
-            .then((response) => {
-                response.forEach((activity: IActivity) => {
-                    activity.date = activity.date.toString().split('.')[0];
-                    this.activities.push(activity);
-                })
-            })
-            .finally(() => {
-                this.loading = false;                
-            }); */
     }
 
+    @action loadActivity = async (id:string)=>{
+        if(this.selectedActivity && this.selectedActivity.id===id){
+            runInAction('getting activity',()=>{                
+                this.loading=false;
+            });
+            return;
+        }else{
+            
+            this.loading=true;
+            this.selectedActivity=undefined;
+
+            let activity=this.activitiesRegistry.get(id);            
+            if(!activity){
+                try{
+                    this.loading=true;
+                    activity=await API.ActivityServices.GetById(id);
+                    
+                    runInAction('getting activity',()=>{
+                        this.selectedActivity=activity;
+                        this.loading=false;
+                    })
+                    
+                }catch(error){
+                    runInAction('getting activity error',()=>{
+                        this.loading=false;
+                        console.log(error);
+                    })
+                    
+                }
+            }else{
+                runInAction('getting activity',()=>{                    
+                    this.selectedActivity=activity;
+                    this.loading=false;
+                })
+            }
+            console.log(this.selectedActivity);
+        }
+        
+        
+    }
 
     @action selectActivity = (id: string) => {
         this.selectedActivity =this.activitiesRegistry.get(id); //this.activities.find(x => x.id === id);
@@ -67,12 +96,17 @@ class ActivityStore {
     }
 
     @action SavePartialChange=(event:FormEvent<HTMLInputElement | HTMLTextAreaElement >)=>{
-        const {name,value}=event.currentTarget;
-        this.selectedActivity={...this.selectedActivity!,[name]:value};
+        const {name,value}=event.currentTarget;   
+        runInAction('editing partial activity',()=>{
+            this.selectedActivity={...this.selectedActivity!,[name]:value};
+            console.log(this.selectedActivity);
+        });        
     }
 
-    @action newActivity=()=>{
-        this.selectedActivity={
+    
+    @action initActivity(){
+        this.writingMode=true;
+        return{
             id:'',
             title:'',
             description:'',
@@ -80,35 +114,36 @@ class ActivityStore {
             date:'',
             city:'',
             venue:''
-        };
-        
-        this.writingMode=true;
+        };   
     }
 
-    @action writeChange = () => {        
-        this.submitting = true;
+    @action newActivity=()=>{
+        this.initActivity();
+    }
+
+    @action writeChange = async(activity:IActivity) => {        
+        this.submitting = true;        
+
         if (this.selectedActivity && this.selectedActivity.id.length > 0) {
-            //Editing activity
-            API.ActivityServices.Update(this.selectedActivity.id, this.selectedActivity)
-                .then(() => {
-                    /* this.activities = [...this.activities.filter(x => x.id !== this.selectedActivity!.id), this.selectedActivity] */
-                    this.activitiesRegistry.set(this.selectedActivity!.id,this.selectedActivity);
-                    //this.selectedActivity = this.selectedActivity;
-                    this.writingMode = false;
-                })
-                .finally(() => { this.submitting = false });
+            //Editing activity 
+            await API.ActivityServices.Update(activity.id,activity);
+            runInAction('editin activity',()=>{
+                this.activitiesRegistry.set(activity.id,activity); 
+                this.selectedActivity=activity;
+                this.writingMode = false;
+                this.submitting=false;
+            })
+            
         } else {
             //creating new activity
-            this.selectedActivity!.id=uuid();
+            activity.id=uuid();
+            await API.ActivityServices.Create(activity);
+            runInAction('adding activity',()=>{
+                this.activitiesRegistry.set(activity.id,activity);
+                this.writingMode = false;
+                this.submitting=false;
+            })
             
-            API.ActivityServices.Create(this.selectedActivity!)
-                .then(() => {
-                    /* this.activities = [...this.activities, activity]
-                    this.selectedActivity = activity; */
-                    this.activitiesRegistry.set(this.selectedActivity!.id,this.selectedActivity);
-                    this.writingMode = false;
-                })
-                .finally(() => { this.submitting = false });
         }
 
     }
