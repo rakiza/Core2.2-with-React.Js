@@ -2,6 +2,7 @@ import React from 'react'
 import { Menu, Container, Button } from 'semantic-ui-react'
 import { NavLink } from 'react-router-dom'
 
+
 interface IProps{
     onCreate:()=>void;    
 }
@@ -18,7 +19,6 @@ const NavBar:React.FC<IProps> = ({onCreate}) => {
                     <Button positive content='Create Activity' as={NavLink} to='/activities/create'/>
                 </Menu.Item>
             </Container>
-
         </Menu>
     )
 }

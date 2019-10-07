@@ -1,10 +1,14 @@
 import React, { useContext, useEffect } from 'react';
-import { Card, Image, Button } from 'semantic-ui-react';
+import { Grid } from 'semantic-ui-react';
 
 import ActivityStore from '../../../App/Stores/ActivityStore';
 import { RouteComponentProps } from 'react-router';
 import Loading from '../../../App/Layout/Loading/Loading';
-import { Link } from 'react-router-dom';
+
+import ActivityDetailsHeader from './ActivityDetailsHeader';
+import ActivityDetailsInfo from './ActivityDetailsInfo';
+import ActivityDetailsChat from './ActivityDetailsChat';
+import ActivityDetailsSideBar from './ActivityDetailsSideBar';
 
 interface detailsParams{
     id:string    
@@ -19,7 +23,7 @@ const ActivityDetails:React.FC<RouteComponentProps<detailsParams>> = ({match}) =
 
     if(loading || !activity) return <Loading content='Loading...'/>
 
-    return (
+    /* return (
         <Card fluid>
             <Image src={`/assets/categoryImages/${activity!.category}.jpg`} wrapped ui={false} /> 
             <Card.Content>
@@ -38,7 +42,19 @@ const ActivityDetails:React.FC<RouteComponentProps<detailsParams>> = ({match}) =
                 </Button.Group>
             </Card.Content>
         </Card>
-    )
+    ) */
+    return(
+        <Grid>
+            <Grid.Column width='10'>
+                <ActivityDetailsHeader activity={activity}/>
+                <ActivityDetailsInfo activity={activity}/>
+                <ActivityDetailsChat/>
+            </Grid.Column>
+            <Grid.Column width='6'>
+                <ActivityDetailsSideBar/>
+            </Grid.Column>
+        </Grid>
+    );
 }
 
 export default ActivityDetails

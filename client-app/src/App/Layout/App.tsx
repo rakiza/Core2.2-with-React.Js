@@ -12,7 +12,9 @@ import Index from '../../Features/Home/Index';
 import ActivityForm from '../../Features/Activities/Dashboard/ActivityForm';
 import ActivityDetails from '../../Features/Activities/Dashboard/ActivityDetails';
 
-
+const marginTop={
+  marginTop:100,
+}
 
 const App: React.FC<RouteComponentProps> = ({ location }) => {
   const activityStore = useContext(ActivityStore);
@@ -28,13 +30,12 @@ const App: React.FC<RouteComponentProps> = ({ location }) => {
 
   return (
     <Fragment>
-
       <Route exact path='/' component={Index} />
       <Route path={'/(.+)'} render={() => (
         <Fragment>
           <NavBar onCreate={activityStore.newActivity} />
 
-          <Container>
+          <Container style={marginTop}>
             <Route exact path='/activities' component={ActivityDashboard} />
             <Route path='/activities/details/:id' component={ActivityDetails} />
             <Route key={location.key} exact path={['/activities/create', '/activities/edit/:id']} component={ActivityForm} />

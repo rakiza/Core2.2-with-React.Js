@@ -1,44 +1,33 @@
-import React, { useContext } from 'react'
+import React, { useContext, Fragment } from 'react'
 import { observer } from 'mobx-react-lite';
-import { Item, Button, Label } from 'semantic-ui-react'
+import { Item, Label } from 'semantic-ui-react'
 
 import ActivityStore from '../../../App/Stores/ActivityStore';
-import { Link } from 'react-router-dom';
+import ActivityListItem from './ActivityListItem';
 
-const ActivityList:React.FC =() => {
+const ActivityList: React.FC = () => {
 
-    const activityStore=useContext(ActivityStore);
-    const{activitiesByDateAsc:activities,submitting,deleteActivity,target}=activityStore;
+    const activityStore = useContext(ActivityStore);
+    const { activitiesByDateAsc: activities } = activityStore;
+
     return (
-        <Item.Group divided>
+        <Fragment>
             {
-                activities.map((activity) =>
-                    <Item key={activity.id}>
-                        <Item.Content>
-                            <Item.Header as='a'>{activity.title}</Item.Header>
-                            <Item.Meta>{activity.date}</Item.Meta>
-                            <Item.Description>
-                                <div>{activity.description}</div>
-                                <div>{activity.city}, {activity.venue}</div>
-                            </Item.Description>
-                            <Item.Extra>
-                                <Button color='blue' floated='right' content='View' as={Link} to={`/activities/details/${activity.id}`} />
-                                <Label content={activity.category} />
-
-                                <Button
-                                    name={activity.id}
-                                    color='red'
-                                    floated='right'
-                                    content='Delete'
-                                    onClick={(event) => deleteActivity(event,activity.id)}
-                                    loading={target===activity.id && submitting} />
-                            </Item.Extra>
-                        </Item.Content>
-                    </Item>
-
-                )
+                activities.map(([group, items]) => (
+                    <Fragment key={group}>
+                        <Label content={group} size='medium' color='blue' />
+                        <Item.Group divided >
+                            {
+                                items.map(it =>
+                                    <ActivityListItem key={it.id} activity={it} />
+                                )
+                            }
+                        </Item.Group>
+                    </Fragment>
+                ))
             }
-        </Item.Group>
+
+        </Fragment>
     )
 }
 
