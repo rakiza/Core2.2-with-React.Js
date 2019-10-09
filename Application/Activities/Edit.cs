@@ -1,6 +1,8 @@
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation;
 using MediatR;
 using Persistence;
 
@@ -8,7 +10,8 @@ namespace Application.Activities
 {
     public class Edit
     {
-        public class Command:IRequest{
+        public class Command : IRequest
+        {
             public Guid Id { get; set; }
             public string Title { get; set; }
             public string Description { get; set; }
@@ -23,26 +26,40 @@ namespace Application.Activities
             private readonly DataContext _context;
 
             public Handler(DataContext context)
-            {               
-                _context = context??throw new ArgumentNullException(nameof(context));
+            {
+                _context = context ?? throw new ArgumentNullException(nameof(context));
             }
 
+            public class CommandValidator : AbstractValidator<Command>
+            {
+                public CommandValidator()
+                {
+                    RuleFor(x => x.Title).NotEmpty();
+                    RuleFor(x => x.Description).NotEmpty();
+                    RuleFor(x => x.Category).NotEmpty();
+                    RuleFor(x => x.Date).NotEmpty();
+                    RuleFor(x => x.City).NotEmpty();
+                    RuleFor(x => x.Venue).NotEmpty();
+                }
+            }
             public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
             {
-                var activity=await _context.Activities.FindAsync(request.Id);
-                if(activity==null) throw new Exception("Not Found !!!!");
-                activity.Title=request.Title??activity.Title;
-                activity.Description=request.Description??activity.Description;
-                activity.Category=request.Category??activity.Category;
+                var activity = await _context.Activities.FindAsync(request.Id);
+                //if (activity == null) throw new Exception("Not Found !!!!");
+                if(activity==null) throw new RestException(HttpStatusCode.NotFound,new{activity=$"activity with this id:{request.Id} not found!"});
                 
-                activity.Date=request.Date;//==null?request.Date:activity.Date;
-                
-                activity.City=request.City??activity.City;
-                activity.Venue=request.Venue??activity.Venue;
+                activity.Title = request.Title ?? activity.Title;
+                activity.Description = request.Description ?? activity.Description;
+                activity.Category = request.Category ?? activity.Category;
+
+                activity.Date = request.Date;//==null?request.Date:activity.Date;
+
+                activity.City = request.City ?? activity.City;
+                activity.Venue = request.Venue ?? activity.Venue;
 
                 _context.Activities.Update(activity);
-                var success=await _context.SaveChangesAsync()>0;
-                if(!success) throw new Exception("Error !!!!");
+                var success = await _context.SaveChangesAsync() > 0;
+                if (!success) throw new Exception("Error !!!!");
                 return Unit.Value;
             }
         }

@@ -4,6 +4,8 @@ import { v4 as uuid } from 'uuid';
 
 import { IActivity } from '../Models/Activity';
 import API from '../API/API';
+import { history } from '../..';
+import { toast } from 'react-toastify';
 
 class ActivityStore {
     @observable activitiesRegistry = new Map();
@@ -14,18 +16,23 @@ class ActivityStore {
     @observable loading: boolean = false;
     @observable submitting: boolean = false;
     @observable target: string = '';
+    
+
 
     @computed get activitiesByDateAsc() {
         return this.groupActivityByDate(Array.from(this.activitiesRegistry.values()));
+        //return this.activitiesRegistry.values();
     }
 
     groupActivityByDate(activities: IActivity[]) {
-        const sortedActivities = activities.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
-
+        
+        const sortedActivities = activities.sort((a, b) => a.date!.getTime() - b.date!.getTime());
+        
         return Object.entries(sortedActivities.reduce(
             (activities, activity) => {
-                const date = activity.date.split('T')[0];
+                const date = activity.date.toISOString().split('T')[0];                
                 activities[date] = activities[date] ? [...activities[date], activity] : [activity];
+                
                 return activities;
             }, {} as { [key: string]: IActivity[] }
         ));
@@ -35,56 +42,44 @@ class ActivityStore {
         try {
             const result = await API.ActivityServices.GetAll();
             result.forEach((activity: IActivity) => {
-                activity.date = activity.date.toString().split('.')[0];
+                activity.date =new Date(activity.date.toString().split('.')[0]);
                 //this.activities.push(activity);
                 this.activitiesRegistry.set(activity.id, activity);
             });
         } catch (errors) {
-            console.log(errors);
+            //console.log(errors);
         }
 
         this.loading = false;
     }
 
-    @action loadActivity = async (id: string) => {
-        if (this.selectedActivity && this.selectedActivity.id === id) {
-            runInAction('getting activity', () => {
-                this.loading = false;
-            });
-            return;
+    @action loadActivity = async (id: string) => { 
+        /* this.selectedActivity=undefined;
+        this.loading=true; */
+
+        let activity = this.activitiesRegistry.get(id);
+        if (activity) {
+            this.selectedActivity=activity;                 
+            return activity;
         } else {
-
-            this.loading = true;
-            this.selectedActivity = undefined;
-
-            let activity = this.activitiesRegistry.get(id);
-            if (!activity) {
-                try {
-                    this.loading = true;
-                    activity = await API.ActivityServices.GetById(id);
-
-                    runInAction('getting activity', () => {
-                        this.selectedActivity = activity;
-                        this.loading = false;
-                    })
-
-                } catch (error) {
-                    runInAction('getting activity error', () => {
-                        this.loading = false;
-                        console.log(error);
-                    })
-
-                }
-            } else {
-                runInAction('getting activity', () => {
-                    this.selectedActivity = activity;
-                    this.loading = false;
-                })
+            //this.loading=true;
+            try{
+                activity=await API.ActivityServices.GetById(id);
+               
+                runInAction('getting activity',()=>{
+                    this.activitiesRegistry.set(activity.id, activity);
+                    this.selectedActivity=activity;
+                    this.loading=false;
+                });
+                return activity;
+            }catch(err){                
+                runInAction('getting activity error',()=>{                    
+                    this.loading=false;
+                });
+                //throw(err);                
             }
-            console.log(this.selectedActivity);
+            
         }
-
-
     }
 
     @action selectActivity = (id: string) => {
@@ -110,7 +105,7 @@ class ActivityStore {
         const { name, value } = event.currentTarget;
         runInAction('editing partial activity', () => {
             this.selectedActivity = { ...this.selectedActivity!, [name]: value };
-            console.log(this.selectedActivity);
+            //console.log(this.selectedActivity);
         });
     }
 
@@ -122,7 +117,7 @@ class ActivityStore {
             title: '',
             description: '',
             category: '',
-            date: '',
+            date: null,
             city: '',
             venue: ''
         };
@@ -133,27 +128,42 @@ class ActivityStore {
     }
 
     @action writeChange = async (activity: IActivity) => {
+        console.log(activity);
         this.submitting = true;
 
         if (this.selectedActivity && this.selectedActivity.id.length > 0) {
             //Editing activity 
-            await API.ActivityServices.Update(activity.id, activity);
-            runInAction('editin activity', () => {
-                this.activitiesRegistry.set(activity.id, activity);
-                this.selectedActivity = activity;
-                this.writingMode = false;
-                this.submitting = false;
-            })
+            try{
+                await API.ActivityServices.Update(activity.id, activity);
+                runInAction('editin activity', () => {
+                    this.activitiesRegistry.set(activity.id, activity);
+                    this.selectedActivity = activity;
+                    this.writingMode = false;
+                    this.submitting = false;
+                    history.push(`/activities/details/${activity.id}`);
+                })
+            }catch(err){
+                toast.error(err.response.data.title);
+                console.log(err.response);
+            }
+            
 
         } else {
             //creating new activity
             activity.id = uuid();
-            await API.ActivityServices.Create(activity);
-            runInAction('adding activity', () => {
-                this.activitiesRegistry.set(activity.id, activity);
-                this.writingMode = false;
-                this.submitting = false;
-            })
+            try{
+                await API.ActivityServices.Create(activity);
+                runInAction('adding activity', () => {
+                    this.activitiesRegistry.set(activity.id, activity);
+                    this.writingMode = false;
+                    this.submitting = false;
+                    history.push(`/activities/details/${activity.id}`);
+                })
+            }catch(err){
+                toast.error(err.response.data.title);
+                console.log(err.response);
+            }
+            
 
         }
 

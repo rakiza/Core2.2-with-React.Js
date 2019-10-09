@@ -7,10 +7,12 @@ import ActivityDashboard from '../../Features/Activities/Dashboard/ActivityDashb
 
 import Loading from './Loading/Loading';
 import ActivityStore from '../Stores/ActivityStore';
-import { Route, withRouter, RouteComponentProps } from 'react-router-dom';
+import { Route, withRouter, RouteComponentProps, Switch } from 'react-router-dom';
 import Index from '../../Features/Home/Index';
 import ActivityForm from '../../Features/Activities/Dashboard/ActivityForm';
 import ActivityDetails from '../../Features/Activities/Dashboard/ActivityDetails';
+import NotFound from './NotFound/NotFound';
+import {ToastContainer} from 'react-toastify';
 
 const marginTop={
   marginTop:100,
@@ -30,23 +32,23 @@ const App: React.FC<RouteComponentProps> = ({ location }) => {
 
   return (
     <Fragment>
+      <ToastContainer position='bottom-right'/>
       <Route exact path='/' component={Index} />
       <Route path={'/(.+)'} render={() => (
         <Fragment>
           <NavBar onCreate={activityStore.newActivity} />
 
           <Container style={marginTop}>
-            <Route exact path='/activities' component={ActivityDashboard} />
-            <Route path='/activities/details/:id' component={ActivityDetails} />
-            <Route key={location.key} exact path={['/activities/create', '/activities/edit/:id']} component={ActivityForm} />
+            <Switch>
+              <Route exact path='/activities' component={ActivityDashboard} />
+              <Route key={location.key} path='/activities/details/:id' component={ActivityDetails} />
+              <Route key={location.key} exact path={['/activities/create', '/activities/edit/:id']} component={ActivityForm} />
+
+              <Route component={NotFound}/>
+            </Switch>
           </Container>
         </Fragment>
       )} />
-
-
-
-
-
     </Fragment>
   );
 

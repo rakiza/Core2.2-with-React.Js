@@ -1,7 +1,7 @@
 import React from 'react'
 import { Container, Segment, Header, Button ,Image} from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
-import ScrolltoTop from '../../App/Layout/ScrolltoTop'
+//import ScrolltoTop from '../../App/Layout/ScrolltoTop'
 
 const Index = () => {
     return (
