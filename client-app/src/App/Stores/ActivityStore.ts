@@ -59,7 +59,7 @@ class ActivityStore {
 
         let activity = this.activitiesRegistry.get(id);
         if (activity) {
-            this.selectedActivity=activity;                 
+            this.selectedActivity=activity;                          
             return activity;
         } else {
             //this.loading=true;

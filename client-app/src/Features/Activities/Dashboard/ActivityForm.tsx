@@ -43,7 +43,7 @@ const ActivityForm: React.FC<RouteComponentProps<editParams>> = ({ match, histor
         if (match.params.id) {
             setLoading(true);
             loadActivity(match.params.id)
-                .then((result) => {
+                .then((result) => {                    
                     setactivity(new ActivityFormValues(result));
                 })
                 .finally(() => setLoading(false));
